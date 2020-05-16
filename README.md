@@ -1,14 +1,14 @@
 # nested_scroll_controller
+![Pub Version](https://img.shields.io/pub/v/nested_scroll_controller)
+<br><br>
+A widget used in conjunction with a basic [ScrollController](https://api.flutter.dev/flutter/widgets/ScrollController-class.html) to allow for controlling a [NestedScrollView](https://api.flutter.dev/flutter/widgets/NestedScrollView-class.html) like it was a regular scroll view. <br>
+This is a small, single-file library which empowers you in every way (and more!) that a standard scroll controller would on a scroll view:
+- animate to an offset or an index
+- jump to an offset or an index
+- add listeners to the total offset
+- TODO: utilize NestedScrollPositions with NestedScrollController as you would ScrollPositions with ScrollController!
+<br>
+#### Usage
+TODO: extend this <br>
+See [example](https://github.com/logiczsniper/nested_scroll_controller/example/main.dart)
 
-A new Flutter package project.
-
-## Getting Started
-
-This project is a starting point for a Dart
-[package](https://flutter.dev/developing-packages/),
-a library module containing code that can be shared easily across
-multiple Flutter or Dart projects.
-
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.dev/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.

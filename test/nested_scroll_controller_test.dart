@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:nested_scroll_controller/nested_scroll_controller.dart';
 
 void main() {
-  test('adds one to input values', () {});
+  /// TODO: add all tests
+  test('', () {});
 }
