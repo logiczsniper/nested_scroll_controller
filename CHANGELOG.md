@@ -8,3 +8,9 @@
 
 * Added example
 * Updated readme, license, pubspec.
+
+## [0.1.0] - 16/05/2020
+
+* Built out many basic ScrollController overrides in NestedScrollController.
+* These include listener handling, equality operator (uses Cantor pairing function) and more.
+* Happy to move out of the pre-release stage.
