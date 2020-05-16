@@ -1,164 +1,120 @@
 import 'package:flutter/material.dart';
 import 'package:nested_scroll_controller/nested_scroll_controller.dart';
 
+/// A simple example app demonstrating basic usage of [NestedScrollController].
+///
+/// The code below is copied-and-modified from [https://api.flutter.dev/flutter/widgets/NestedScrollView-class.html].
+/// The only modifications made are for the [NestedScrollController] to be used.
+
 void main() {
   runApp(TestApp());
 }
 
-double itemExtent = 60.0;
-
-Widget _buildTile(
-  BuildContext context,
-  int index,
-  NestedScrollController controller,
-) {
-  return Container(
-    margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 30.0),
-    decoration: BoxDecoration(
-      color: Colors.deepOrangeAccent,
-      border: Border.all(color: Colors.deepOrange),
-      borderRadius: BorderRadius.circular(15.0),
-    ),
-    child: ListTile(
-      title: Text("Item $index"),
-      contentPadding: EdgeInsets.all(5.0),
-      onTap: () {
-        controller.animateToIndex(index, itemExtent: itemExtent);
-      },
-    ),
-  );
-}
-
-const tabCount = 2;
+final double itemExtent = 48.0;
 
 class TestApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: "NestedScrollController Example",
       theme: ThemeData(primarySwatch: Colors.orange),
-      home: TestAppHomePage(),
+      home: ExamplePage(),
     );
   }
 }
 
-class TestTabBarDelegate extends SliverPersistentHeaderDelegate {
-  TestTabBarDelegate({this.controller});
-
-  final TabController controller;
-
-  @override
-  double get minExtent => kToolbarHeight;
-
-  @override
-  double get maxExtent => kToolbarHeight;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: Theme.of(context).cardColor,
-      height: kToolbarHeight,
-      child: TabBar(
-        controller: controller,
-        key: PageStorageKey<Type>(TabBar),
-        indicatorColor: Theme.of(context).primaryColor,
-        tabs: <Widget>[
-          Tab(text: 'one'),
-          Tab(text: 'two'),
-        ],
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant TestTabBarDelegate oldDelegate) {
-    return oldDelegate.controller != controller;
-  }
-}
-
-class TestAppHomePage extends StatefulWidget {
-  @override
-  TestAppHomePageState createState() => TestAppHomePageState();
-}
-
-class TestAppHomePageState extends State<TestAppHomePage> with TickerProviderStateMixin {
-  ScrollController _scrollController = ScrollController();
-
-  NestedScrollController _nestedScrollController;
-  TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: tabCount, vsync: this);
-  }
+class ExamplePage extends StatelessWidget {
+  List<String> get _tabs => ["One", "Two", "Three"];
 
   @override
   Widget build(BuildContext context) {
+    ScrollController outerScrollController = ScrollController();
+    NestedScrollController nestedScrollController;
+
     return Scaffold(
-      body: NestedScrollView(
-        controller: _scrollController,
-        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-          return <Widget>[
-            SliverAppBar(
-              title: Text("Test Title"),
-              expandedHeight: 100,
-            ),
-            SliverPersistentHeader(
-              delegate: TestTabBarDelegate(controller: _tabController),
-            ),
-          ];
-        },
-        body: Builder(builder: (context) {
-          _nestedScrollController = NestedScrollController(
-            outerController: _scrollController,
-            bodyContext: context,
-            centerCorrectionOffset: 200.0,
-          );
-          return TestHomePageBody(
-            tabController: _tabController,
-            scrollController: _nestedScrollController,
-          );
-        }),
+      body: DefaultTabController(
+        length: _tabs.length,
+        child: NestedScrollView(
+          /// 1. Use the [controller] field with a custom [ScrollController].
+          controller: outerScrollController,
+          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+            return <Widget>[
+              SliverOverlapAbsorber(
+                handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                sliver: SliverAppBar(
+                  title: const Text('Books'),
+                  pinned: true,
+                  expandedHeight: 150.0,
+                  forceElevated: innerBoxIsScrolled,
+                  bottom: TabBar(
+                    tabs: _tabs.map((String name) => Tab(text: name)).toList(),
+                  ),
+                ),
+              ),
+            ];
+          },
+
+          /// 2. Wrap the body in a [Builder] to provide the [NestedScrollView.body]
+          /// [BuildContext].
+          body: Builder(
+            builder: (context) {
+              /// 3. Create the [NestedScrollController] here!
+              ///
+              /// In this example, I noticed that the center** was originally around
+              /// the 2nd index, hence the 3rd parameter.
+              ///
+              /// ** See [NestedScrollController.centerCorrectionOffset] for more information
+              /// on this term.
+              nestedScrollController = NestedScrollController(
+                bodyContext: context,
+                outerController: outerScrollController,
+                centerCorrectionOffset: itemExtent * 4,
+              );
+              return TabBarView(
+                children: _tabs.map((String name) {
+                  return SafeArea(
+                    top: false,
+                    bottom: false,
+                    child: Builder(
+                      builder: (BuildContext context) {
+                        return CustomScrollView(
+                          key: PageStorageKey<String>(name),
+                          slivers: <Widget>[
+                            SliverOverlapInjector(
+                              handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                            ),
+                            SliverPadding(
+                              padding: const EdgeInsets.all(8.0),
+                              sliver: SliverFixedExtentList(
+                                itemExtent: itemExtent,
+                                delegate: SliverChildBuilderDelegate(
+                                  (BuildContext context, int index) {
+                                    return ListTile(
+                                      title: Text('Item $index'),
+                                      onTap: () {
+                                        /// 4. Use the [NestedScrollController]!
+                                        nestedScrollController.animateToIndex(
+                                          index,
+                                          itemExtent: itemExtent,
+                                        );
+                                      },
+                                    );
+                                  },
+                                  childCount: 30,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        ),
       ),
-    );
-  }
-}
-
-class TestHomePageBody extends StatefulWidget {
-  TestHomePageBody({this.scrollController, this.tabController});
-
-  final NestedScrollController scrollController;
-  final TabController tabController;
-
-  TestHomePageBodyState createState() => TestHomePageBodyState();
-}
-
-class TestHomePageBodyState extends State<TestHomePageBody> {
-  Key _key = PageStorageKey({});
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TabBarView(
-      controller: widget.tabController,
-      key: _key,
-      children: List<Widget>.generate(tabCount, (int index) {
-        return ListView.builder(
-          key: PageStorageKey<int>(index),
-          itemBuilder: (context, index) => _buildTile(context, index, widget.scrollController),
-          itemCount: 30,
-          itemExtent: itemExtent,
-        );
-      }),
     );
   }
 }
