@@ -10,5 +10,5 @@ This is a small, single-file library which empowers you in every way (and more!)
 <br>
 #### Usage
 TODO: extend this <br>
-See [example](https://github.com/logiczsniper/nested_scroll_controller/example/main.dart)
+See [example](https://github.com/logiczsniper/nested_scroll_controller/blob/master/example/lib/main.dart)
 
