@@ -4,7 +4,7 @@ import 'package:nested_scroll_controller/nested_scroll_controller.dart';
 /// A simple example app demonstrating basic usage of [NestedScrollController].
 ///
 /// The code below is copied-and-modified from [https://api.flutter.dev/flutter/widgets/NestedScrollView-class.html].
-/// The only modifications made are for the [NestedScrollController] to be used.
+/// The only modifications made are for the [NestedScrollController] to be clearly used.
 
 void main() {
   runApp(TestApp());
@@ -17,14 +17,13 @@ class TestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "NestedScrollController Example",
-      theme: ThemeData(primarySwatch: Colors.orange),
       home: ExamplePage(),
     );
   }
 }
 
 class ExamplePage extends StatelessWidget {
-  List<String> get _tabs => ["One", "Two", "Three"];
+  List<String> get _tabs => ["One", "Two"];
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +56,7 @@ class ExamplePage extends StatelessWidget {
           /// 2. Wrap the body in a [Builder] to provide the [NestedScrollView.body]
           /// [BuildContext].
           body: Builder(
-            builder: (context) {
+            builder: (BuildContext context) {
               /// 3. Create the [NestedScrollController] here!
               ///
               /// In this example, I noticed that the center** was originally around
@@ -75,38 +74,34 @@ class ExamplePage extends StatelessWidget {
                   return SafeArea(
                     top: false,
                     bottom: false,
-                    child: Builder(
-                      builder: (BuildContext context) {
-                        return CustomScrollView(
-                          key: PageStorageKey<String>(name),
-                          slivers: <Widget>[
-                            SliverOverlapInjector(
-                              handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-                            ),
-                            SliverPadding(
-                              padding: const EdgeInsets.all(8.0),
-                              sliver: SliverFixedExtentList(
-                                itemExtent: itemExtent,
-                                delegate: SliverChildBuilderDelegate(
-                                  (BuildContext context, int index) {
-                                    return ListTile(
-                                      title: Text('Item $index'),
-                                      onTap: () {
-                                        /// 4. Use the [NestedScrollController]!
-                                        nestedScrollController.animateToIndex(
-                                          index,
-                                          itemExtent: itemExtent,
-                                        );
-                                      },
+                    child: CustomScrollView(
+                      key: PageStorageKey<String>(name),
+                      slivers: <Widget>[
+                        SliverOverlapInjector(
+                          handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                        ),
+                        SliverPadding(
+                          padding: const EdgeInsets.all(8.0),
+                          sliver: SliverFixedExtentList(
+                            itemExtent: itemExtent,
+                            delegate: SliverChildBuilderDelegate(
+                              (BuildContext context, int index) {
+                                return ListTile(
+                                  title: Text('Item $index'),
+                                  onTap: () {
+                                    /// 4. Use the [NestedScrollController]!
+                                    nestedScrollController.animateToIndex(
+                                      index,
+                                      itemExtent: itemExtent,
                                     );
                                   },
-                                  childCount: 30,
-                                ),
-                              ),
+                                );
+                              },
+                              childCount: 30,
                             ),
-                          ],
-                        );
-                      },
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 }).toList(),
