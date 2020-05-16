@@ -9,6 +9,7 @@ This is a small, single-file library which empowers you in every way (and more!)
 - TODO: utilize NestedScrollPositions with NestedScrollController as you would ScrollPositions with ScrollController!
 <br>
 ### Usage
+
 See [example](example/lib/main.dart).
 <br>
 To utilize [NestedScrollController] there are four main steps:
