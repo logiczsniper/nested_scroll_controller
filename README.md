@@ -8,7 +8,8 @@ This is a small, single-file library which empowers you in every way (and more!)
 - add listeners to the total offset
 - TODO: utilize NestedScrollPositions with NestedScrollController as you would ScrollPositions with ScrollController!
 <br>
-### Usage
+
+## Usage
 
 See [example](example/lib/main.dart).
 <br>
