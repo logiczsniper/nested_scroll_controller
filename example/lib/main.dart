@@ -27,15 +27,15 @@ class ExamplePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ScrollController outerScrollController = ScrollController();
-    NestedScrollController nestedScrollController;
+    /// Create the [NestedScrollController].
+    NestedScrollController nestedScrollController = NestedScrollController();
 
     return Scaffold(
       body: DefaultTabController(
         length: _tabs.length,
         child: NestedScrollView(
-          /// 1. Use the [controller] field with a custom [ScrollController].
-          controller: outerScrollController,
+          /// 2. Give the controller to the [NestedScrollView].
+          controller: nestedScrollController,
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
             return <Widget>[
               SliverOverlapAbsorber(
@@ -53,23 +53,11 @@ class ExamplePage extends StatelessWidget {
             ];
           },
 
-          /// 2. Wrap the body in a [Builder] to provide the [NestedScrollView.body]
-          /// [BuildContext].
+          /// 3. Wrap the body in a [Builder] to provide the [NestedScrollView.body] [BuildContext].
           body: Builder(
             builder: (BuildContext context) {
-              /// 3. Create the [NestedScrollController] here!
-              ///
-              /// In this example, I noticed that the center** was originally around
-              /// the 2nd index, hence the 3rd parameter.
-              ///
-              /// ** See [NestedScrollController.centerCorrectionOffset] for more information
-              /// on this term.
-              nestedScrollController = NestedScrollController(
-                bodyContext: context,
-                outerScrollController: outerScrollController,
-                centerCorrectionOffset: itemExtent * 4,
-              );
-
+              /// 4. Set the [NestedScrollView.innerScrollController].
+              nestedScrollController.setInnerScrollController(context);
               return TabBarView(
                 children: _tabs.map((String name) {
                   return SafeArea(
@@ -91,7 +79,7 @@ class ExamplePage extends StatelessWidget {
                                   title: Text('Item $index'),
                                   onTap: () {
                                     /// 4. Use the [NestedScrollController]!
-                                    nestedScrollController.animateToIndex(
+                                    nestedScrollController.nestedAnimateToIndex(
                                       index,
                                       itemExtent: itemExtent,
                                     );

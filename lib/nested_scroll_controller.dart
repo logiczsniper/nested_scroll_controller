@@ -5,106 +5,115 @@ import 'package:flutter/widgets.dart';
 enum _View { inner, outer }
 enum _MovementMethod { animate, jump }
 
+typedef _ScrollerFunction = Future<void> Function(_NestedAutoScroller);
+
 /// Constructed within the [body] of [NestedScrollView], wrapped in a [Builder] to
 /// get the [BuildContext] which contains the [innerController] as the [PrimaryScrollController].
 class NestedScrollController extends ScrollController {
   NestedScrollController({
-    @required this.outerScrollController,
-    @required BuildContext bodyContext,
-    double initialScrollOffset = 0.0,
-    bool keepScrollOffset = true,
+    this.initialScrollOffset = 0.0,
+    this.keepScrollOffset = true,
     String debugLabel,
 
     /// Special [NestedAutoScroller] parameter(s).
-    double threshold = 0.0,
-    double centerCorrectionOffset = 0.0,
-  })  : this.innerScrollController = PrimaryScrollController.of(bodyContext),
-        super(
+    this.threshold = 0.0,
+    this.centerCorrectionOffset = 0.0,
+  }) : super(
           initialScrollOffset: initialScrollOffset,
           keepScrollOffset: keepScrollOffset,
           debugLabel: debugLabel,
-        ) {
-    _nestedAutoScroller = _NestedAutoScroller(
-      scrollController: outerScrollController,
+        );
+
+  ScrollController innerScrollController;
+  final double threshold;
+  final double centerCorrectionOffset;
+  final double initialScrollOffset;
+  final bool keepScrollOffset;
+
+  @protected
+  Future<void> useScroller(
+      _ScrollerFunction _scrollerFunction, ScrollController outerScrollController) {
+    assert(innerScrollController != null,
+        "The inner scroll controller must be set before attempting to scroll!");
+    var _nestedAutoScroller = _NestedAutoScroller(
+      scrollController: this,
       innerScrollController: innerScrollController,
       threshold: threshold,
       centerCorrectionOffset: centerCorrectionOffset,
     );
+
+    return _scrollerFunction(_nestedAutoScroller);
   }
 
-  /// The auto scroller which will be used to complete the movements.
-  _NestedAutoScroller _nestedAutoScroller;
-  final ScrollController outerScrollController;
-  final ScrollController innerScrollController;
+  void setInnerScrollController(BuildContext bodyContext) =>
+      innerScrollController = PrimaryScrollController.of(bodyContext);
 
-  @override
-  Future<void> jumpTo(double offset) {
-    return _nestedAutoScroller.jumpTo(offset);
+  Future<void> nestedJumpTo(double offset) {
+    return useScroller((scroller) => scroller.jumpTo(offset), this);
   }
 
-  @override
-  Future<void> animateTo(
+  Future<void> nestedAnimateTo(
     double offset, {
     Duration duration,
     Curve curve,
     Curve endCurve,
   }) {
-    return _nestedAutoScroller.animateTo(
-      offset,
-      duration: duration,
-      startCurve: curve,
-      endCurve: endCurve,
-    );
+    return useScroller(
+        (scroller) => scroller.animateTo(
+              offset,
+              duration: duration,
+              startCurve: curve,
+              endCurve: endCurve,
+            ),
+        this);
   }
 
-  Future<void> animateToIndex(
+  Future<void> nestedAnimateToIndex(
     int index, {
     @required double itemExtent,
     Duration duration,
     Curve curve,
     Curve endCurve,
   }) {
-    return _nestedAutoScroller.animateToIndex(
-      index,
-      itemExtent,
-      duration: duration,
-      startCurve: curve,
-      endCurve: endCurve,
-    );
+    return useScroller(
+        (scroller) => scroller.animateToIndex(
+              index,
+              itemExtent,
+              duration: duration,
+              startCurve: curve,
+              endCurve: endCurve,
+            ),
+        this);
   }
 
   @override
   void addListener(VoidCallback listener) {
-    outerScrollController.addListener(listener);
+    super.addListener(listener);
     innerScrollController.addListener(listener);
   }
 
   @override
   void removeListener(VoidCallback listener) {
-    outerScrollController.removeListener(listener);
+    super.removeListener(listener);
     innerScrollController.removeListener(listener);
   }
 
   @override
   void notifyListeners() {
-    outerScrollController.notifyListeners();
+    super.notifyListeners();
     innerScrollController.notifyListeners();
   }
 
   @override
-  double get initialScrollOffset =>
-      outerScrollController.initialScrollOffset + innerScrollController.initialScrollOffset;
+  bool get hasListeners => super.hasListeners || innerScrollController.hasListeners;
 
   @override
-  bool get hasListeners => outerScrollController.hasListeners || innerScrollController.hasListeners;
-
-  @override
-  double get offset => outerScrollController.offset + innerScrollController.offset;
+  double get offset => super.offset + innerScrollController.offset;
 
   @override
   int get hashCode {
     /// Cantor pairing function.
-    int k1 = outerScrollController.hashCode;
+    int k1 = super.hashCode;
     int k2 = innerScrollController.hashCode;
 
     return (0.5 * (k1 + k2) * (k1 + k2 + 1) + k2).toInt();
@@ -112,12 +121,11 @@ class NestedScrollController extends ScrollController {
 
   @override
   bool operator ==(dynamic other) {
-    return other is NestedScrollController && other.hashCode == this.hashCode;
+    return other is NestedScrollController && other.hashCode == super.hashCode;
   }
 
   @override
   void dispose() {
-    outerScrollController.dispose();
     innerScrollController.dispose();
     super.dispose();
   }
@@ -125,7 +133,7 @@ class NestedScrollController extends ScrollController {
 
 class _NestedAutoScroller {
   /// The scroll controllers of the [NestedListView].
-  final ScrollController scrollController;
+  final NestedScrollController scrollController;
   final ScrollController innerScrollController;
 
   /// The offset applied from the top of the list which 'centers' the [index] when
@@ -327,6 +335,8 @@ class _NestedAutoScroller {
 
         break;
     }
+
+    if (_startDuration == 0) return onZeroDuration(null);
 
     switch (movementMethod) {
       case _MovementMethod.animate:
