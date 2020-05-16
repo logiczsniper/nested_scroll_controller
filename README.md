@@ -13,6 +13,7 @@ This is a small, single-file library which empowers you in every way (and more!)
 See [example](example/lib/main.dart).
 <br>
 To utilize [NestedScrollController] there are four main steps:
+
 ```dart
     /// In build method...
     ScrollController outerScrollController = ScrollController();
