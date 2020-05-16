@@ -66,9 +66,10 @@ class ExamplePage extends StatelessWidget {
               /// on this term.
               nestedScrollController = NestedScrollController(
                 bodyContext: context,
-                outerController: outerScrollController,
+                outerScrollController: outerScrollController,
                 centerCorrectionOffset: itemExtent * 4,
               );
+
               return TabBarView(
                 children: _tabs.map((String name) {
                   return SafeArea(

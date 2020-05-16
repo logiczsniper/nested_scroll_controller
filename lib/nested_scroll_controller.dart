@@ -9,7 +9,7 @@ enum _MovementMethod { animate, jump }
 /// get the [BuildContext] which contains the [innerController] as the [PrimaryScrollController].
 class NestedScrollController extends ScrollController {
   NestedScrollController({
-    @required ScrollController outerController,
+    @required this.outerScrollController,
     @required BuildContext bodyContext,
     double initialScrollOffset = 0.0,
     bool keepScrollOffset = true,
@@ -18,14 +18,15 @@ class NestedScrollController extends ScrollController {
     /// Special [NestedAutoScroller] parameter(s).
     double threshold = 0.0,
     double centerCorrectionOffset = 0.0,
-  }) : super(
+  })  : this.innerScrollController = PrimaryScrollController.of(bodyContext),
+        super(
           initialScrollOffset: initialScrollOffset,
           keepScrollOffset: keepScrollOffset,
           debugLabel: debugLabel,
         ) {
     _nestedAutoScroller = _NestedAutoScroller(
-      scrollController: outerController,
-      innerScrollController: PrimaryScrollController.of(bodyContext),
+      scrollController: outerScrollController,
+      innerScrollController: innerScrollController,
       threshold: threshold,
       centerCorrectionOffset: centerCorrectionOffset,
     );
@@ -33,6 +34,8 @@ class NestedScrollController extends ScrollController {
 
   /// The auto scroller which will be used to complete the movements.
   _NestedAutoScroller _nestedAutoScroller;
+  final ScrollController outerScrollController;
+  final ScrollController innerScrollController;
 
   @override
   Future<void> jumpTo(double offset) {
@@ -68,6 +71,55 @@ class NestedScrollController extends ScrollController {
       startCurve: curve,
       endCurve: endCurve,
     );
+  }
+
+  @override
+  void addListener(VoidCallback listener) {
+    outerScrollController.addListener(listener);
+    innerScrollController.addListener(listener);
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    outerScrollController.removeListener(listener);
+    innerScrollController.removeListener(listener);
+  }
+
+  @override
+  void notifyListeners() {
+    outerScrollController.notifyListeners();
+    innerScrollController.notifyListeners();
+  }
+
+  @override
+  double get initialScrollOffset =>
+      outerScrollController.initialScrollOffset + innerScrollController.initialScrollOffset;
+
+  @override
+  bool get hasListeners => outerScrollController.hasListeners || innerScrollController.hasListeners;
+
+  @override
+  double get offset => outerScrollController.offset + innerScrollController.offset;
+
+  @override
+  int get hashCode {
+    /// Cantor pairing function.
+    int k1 = outerScrollController.hashCode;
+    int k2 = innerScrollController.hashCode;
+
+    return (0.5 * (k1 + k2) * (k1 + k2 + 1) + k2).toInt();
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return other is NestedScrollController && other.hashCode == this.hashCode;
+  }
+
+  @override
+  void dispose() {
+    outerScrollController.dispose();
+    innerScrollController.dispose();
+    super.dispose();
   }
 }
 
