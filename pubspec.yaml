@@ -1,6 +1,6 @@
 name: nested_scroll_controller
 description: A ScrollController specifically for controlling a NestedScrollView.
-version: 0.0.2
+version: 0.1.0
 author: Logan Czernel
 homepage: https://github.com/logiczsniper/nested_scroll_controller
 
