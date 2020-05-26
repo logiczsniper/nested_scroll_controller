@@ -20,3 +20,7 @@
 * BREAKING CHANGES: see updated example or readme to learn how the nested scroll controller is used with this version.
 * Added gif demonstration.
 * Fixed minor bugs.
+
+## [0.2.1] - 26/05/2020
+
+* Fixed README - the .gif was not working on pub.dev.
