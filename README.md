@@ -67,5 +67,4 @@ Ofcourse, you can add/remove listeners just like a regular scroll controller:
 
 ## Result
 
-The following is the result from `example/lib/main.dart`.
-![Example](example\demo.gif)
+See the example result [here](https://github.com/logiczsniper/nested_scroll_controller/blob/master/example/demo.gif).

@@ -54,7 +54,9 @@ class NestedScrollController extends ScrollController {
 
   @protected
   Future<void> useScroller(
-      _ScrollerFunction _scrollerFunction, ScrollController outerScrollController) {
+    _ScrollerFunction _scrollerFunction,
+    ScrollController outerScrollController,
+  ) {
     assert(
       innerScrollController != null,
       "The inner scroll controller must not be null when attempting to scroll!\nHint: call NestedScrollController.enableScroll in the body of your NestedScrollView. Head over to https://pub.dev/packages/nested_scroll_controller for more information.",
