@@ -10,6 +10,29 @@ typedef _ScrollerFunction = Future<void> Function(_NestedAutoScroller);
 /// Constructed within the [body] of [NestedScrollView], wrapped in a [Builder] to
 /// get the [BuildContext] which contains the [innerController] as the [PrimaryScrollController].
 class NestedScrollController extends ScrollController {
+  /// The [ScrollController] of the inner scroll view.
+  ///
+  /// Must be set before attempting to scroll.
+  ScrollController innerScrollController;
+
+  /// The offset which 'centers' an item when it is scrolled to.
+  ///
+  /// * See [_NestedAutoScroller.centerCorrectionOffset].
+  double centerCorrectionOffset;
+
+  /// * See [_NestedAutoScroller.threshold].
+  final double threshold;
+
+  /// * See [ScrollController.initialScrollOffset]
+  final double initialScrollOffset;
+
+  /// * See [ScrollController.keepScrollOffset]
+  final bool keepScrollOffset;
+
+  /// Whether or not to center the item on the screen when
+  /// it is scrolled to.
+  final bool centerScroll;
+
   NestedScrollController({
     this.initialScrollOffset = 0.0,
     this.keepScrollOffset = true,
@@ -17,41 +40,77 @@ class NestedScrollController extends ScrollController {
 
     /// Special [NestedAutoScroller] parameter(s).
     this.threshold = 0.0,
-    this.centerCorrectionOffset = 0.0,
-  }) : super(
+    this.centerCorrectionOffset,
+    this.centerScroll = true,
+  })  : _listeners = [],
+        super(
           initialScrollOffset: initialScrollOffset,
           keepScrollOffset: keepScrollOffset,
           debugLabel: debugLabel,
         );
 
-  ScrollController innerScrollController;
-  final double threshold;
-  final double centerCorrectionOffset;
-  final double initialScrollOffset;
-  final bool keepScrollOffset;
+  @protected
+  List<VoidCallback> _listeners;
 
   @protected
   Future<void> useScroller(
       _ScrollerFunction _scrollerFunction, ScrollController outerScrollController) {
-    assert(innerScrollController != null,
-        "The inner scroll controller must be set before attempting to scroll!");
+    assert(
+      innerScrollController != null,
+      "The inner scroll controller must not be null when attempting to scroll!\nHint: call NestedScrollController.enableScroll in the body of your NestedScrollView. Head over to https://pub.dev/packages/nested_scroll_controller for more information.",
+    );
+    assert(
+      centerCorrectionOffset != null || centerScroll != true,
+      "The centerCorrectionOffset must not be null when attempting to center scroll!\nHint: call NestedScrollController.enableCenterScroll in the body of your NestedScrollView. Head over to https://pub.dev/packages/nested_scroll_controller for more information.",
+    );
+
+    /// Create and use the [_NestedAutoScroller].
     var _nestedAutoScroller = _NestedAutoScroller(
       scrollController: this,
       innerScrollController: innerScrollController,
       threshold: threshold,
-      centerCorrectionOffset: centerCorrectionOffset,
+      centerCorrectionOffset: centerCorrectionOffset ?? 0.0,
     );
 
     return _scrollerFunction(_nestedAutoScroller);
   }
 
-  void setInnerScrollController(BuildContext bodyContext) =>
-      innerScrollController = PrimaryScrollController.of(bodyContext);
+  /// Sets the [innerScrollController] for the [NestedScrollController].
+  ///
+  /// This is required before attempting to scroll. The [bodyContext] must be
+  /// a [BuildContext] aquired from the [body] of the [NestedScrollView]. Using this
+  /// context, we can obtain (and set) the [innerScrollController].
+  void enableScroll(BuildContext bodyContext) {
+    innerScrollController = PrimaryScrollController.of(bodyContext);
 
+    /// Add each listener to the new [innerScrollController].
+    for (VoidCallback listener in _listeners) innerScrollController.addListener(listener);
+  }
+
+  /// Sets the [centerCorrectionOffset] for the [NestedScrollController].
+  ///
+  /// This is required before attempting to scroll if [centerScroll] is true. The [constraints]
+  /// must be a [BoxConstraints] aquired from the body of the [NestedScrollView]. Using
+  /// [contraints.maxHeight], we can roughly obtain (and set) the correct [centerCorrectionOffset].
+  void enableCenterScroll(BoxConstraints constraints) {
+    if (centerScroll && centerCorrectionOffset == null) {
+      centerCorrectionOffset = constraints.maxHeight / 4;
+    }
+  }
+
+  double get innerOffset => innerScrollController?.offset ?? 0.0;
+  double get totalOffset => offset + innerOffset;
+
+  /// Jump to the [offset] in the [NestedScrollView].
+  ///
+  /// * See [_NestedAutoScroller.jumpTo].
   Future<void> nestedJumpTo(double offset) {
     return useScroller((scroller) => scroller.jumpTo(offset), this);
   }
 
+  /// Animate to the [offset] in the [NestedScrollView].
+  ///
+  /// * See [_NestedAutoScroller.animateTo].
   Future<void> nestedAnimateTo(
     double offset, {
     Duration duration,
@@ -68,6 +127,9 @@ class NestedScrollController extends ScrollController {
         this);
   }
 
+  /// Animate to the [index] in the [NestedScrollView].
+  ///
+  /// * See [_NestedAutoScroller.animateToIndex].
   Future<void> nestedAnimateToIndex(
     int index, {
     @required double itemExtent,
@@ -89,32 +151,39 @@ class NestedScrollController extends ScrollController {
   @override
   void addListener(VoidCallback listener) {
     super.addListener(listener);
-    innerScrollController.addListener(listener);
+    innerScrollController?.addListener(listener);
+    _listeners.add(listener);
   }
 
   @override
   void removeListener(VoidCallback listener) {
     super.removeListener(listener);
-    innerScrollController.removeListener(listener);
+    innerScrollController?.removeListener(listener);
+    _listeners.remove(listener);
   }
 
   @override
   void notifyListeners() {
     super.notifyListeners();
-    innerScrollController.notifyListeners();
+    innerScrollController?.notifyListeners();
   }
 
   @override
-  bool get hasListeners => super.hasListeners || innerScrollController.hasListeners;
+  bool get hasListeners => _listeners.isNotEmpty;
 
   @override
-  double get offset => super.offset + innerScrollController.offset;
+  double get offset {
+    if (super.positions.isNotEmpty)
+      return super.offset;
+    else
+      return 0.0;
+  }
 
   @override
   int get hashCode {
     /// Cantor pairing function.
     int k1 = super.hashCode;
-    int k2 = innerScrollController.hashCode;
+    int k2 = innerScrollController?.hashCode ?? 0;
 
     return (0.5 * (k1 + k2) * (k1 + k2 + 1) + k2).toInt();
   }
@@ -126,7 +195,8 @@ class NestedScrollController extends ScrollController {
 
   @override
   void dispose() {
-    innerScrollController.dispose();
+    _listeners = [];
+    innerScrollController?.dispose();
     super.dispose();
   }
 }
@@ -417,7 +487,6 @@ class _NestedAutoScroller {
   }) {
     assert(_offset >= 0);
 
-    //  FIXME: there is a chance this should be + _offset
     this.distance = _currentTotalOffset - _offset;
     this.movementMethod = _MovementMethod.animate;
     this.duration = duration;

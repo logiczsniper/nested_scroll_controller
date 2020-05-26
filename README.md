@@ -12,37 +12,60 @@ This is a small library which empowers you to control the offset of a [NestedScr
 
 See [example](example/lib/main.dart).
 <br>
-To utilize [NestedScrollController] there are four main steps:
+To utilize [NestedScrollController] there are five main steps:
 
 ```dart
     /// 1. Create the [NestedScrollController].
-    NestedScrollController nestedScrollController = NestedScrollController();
-
-    return ... /// [Scaffold] and [DefaultTabController] here.
-         NestedScrollView(
-          /// 2. Set the controller of the [NestedScrollView] to the nestedScrollController.
-          controller: nestedScrollController,
-          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) { ... },
-
-          /// 3. Wrap the body in a [Builder] to provide the [NestedScrollView.body] [BuildContext].
-          body: Builder(
-            builder: (context) {
-              /// 4. Set the [NestedScrollView.innerScrollController].
-              nestedScrollController.setInnerScrollController(context);
-              return ... /// [TabBarView] with [CustomScrollView] here.
-                    SliverPadding(
-                        padding: const EdgeInsets.all(8.0),
-                        sliver: SliverFixedExtentList(
-                        itemExtent: itemExtent,
-                        delegate: SliverChildBuilderDelegate(
-                            (BuildContext context, int index) {
-                            return ListTile(
-                                title: Text('Item $index'),
-                                onTap: () {
-                                /// 4. Use the [NestedScrollController]!
-                                nestedScrollController.nestedAnimateToIndex(
-                                    index,
-                                    itemExtent: itemExtent,
-                                );
-                                      ...
+    final NestedScrollController nestedScrollController = NestedScrollController();
 ```
+
+```dart
+    NestedScrollView(
+        /// 2. Set the controller of the [NestedScrollView] to the nestedScrollController.
+        controller: nestedScrollController,
+```
+
+```dart
+        /// 3. Wrap the body of the [NestedScrollView] in a [LayoutBuilder].
+        ///
+        /// NOTE: if [nestedScrollController.centerScroll] is false (defaults to true),
+        ///       then [constraints] is not needed and a [Builder] can be used instead of
+        ///       the [LayoutBuilder].
+        body: LayoutBuilder(
+            builder: (context, constraints) {
+                /// 4. Enable scrolling and center scrolling.
+                ///
+                /// NOTE: Only call [enableCenterScroll] if 
+                ///       [nestedScrollController.centerScroll] is true (defaults to true).
+                nestedScrollController.enableScroll(context);
+                nestedScrollController.enableCenterScroll(constraints);
+```
+
+```dart
+                ListTile(
+                    title: Text('Item $index'),
+                    onTap: () {
+                    /// 5. Use the [NestedScrollController] anywhere (after step 4).
+                        nestedScrollController.nestedAnimateToIndex(
+                            index,
+                            itemExtent: itemExtent,
+                        );
+                    }
+                );
+                                      
+```
+
+Ofcourse, you can add/remove listeners just like a regular scroll controller:
+
+```dart
+    nestedScrollController.addListener(() {
+      print("Outer: ${nestedScrollController.offset}");
+      print("Inner: ${nestedScrollController.innerOffset}");
+      print("Total: ${nestedScrollController.totalOffset}");
+    });
+```
+
+## Result
+
+The following is the result from `example/lib/main.dart`.
+![Example](example\demo.gif)

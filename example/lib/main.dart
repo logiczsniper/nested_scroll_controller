@@ -25,11 +25,11 @@ class TestApp extends StatelessWidget {
 class ExamplePage extends StatelessWidget {
   List<String> get _tabs => ["One", "Two"];
 
+  /// 1. Create the [NestedScrollController].
+  final NestedScrollController nestedScrollController = NestedScrollController();
+
   @override
   Widget build(BuildContext context) {
-    /// Create the [NestedScrollController].
-    NestedScrollController nestedScrollController = NestedScrollController();
-
     return Scaffold(
       body: DefaultTabController(
         length: _tabs.length,
@@ -43,7 +43,7 @@ class ExamplePage extends StatelessWidget {
                 sliver: SliverAppBar(
                   title: const Text('Books'),
                   pinned: true,
-                  expandedHeight: 150.0,
+                  expandedHeight: 200.0,
                   forceElevated: innerBoxIsScrolled,
                   bottom: TabBar(
                     tabs: _tabs.map((String name) => Tab(text: name)).toList(),
@@ -54,10 +54,14 @@ class ExamplePage extends StatelessWidget {
           },
 
           /// 3. Wrap the body in a [Builder] to provide the [NestedScrollView.body] [BuildContext].
-          body: Builder(
-            builder: (BuildContext context) {
-              /// 4. Set the [NestedScrollView.innerScrollController].
-              nestedScrollController.setInnerScrollController(context);
+          body: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              /// 4. Provide the [NestedScrollController] with the [NestedScrollView] body context
+              ///    and, since [NestedScrollController.centerScroll] is true, also provide the controller
+              ///    with the [NestedScrollView] body constraints.
+              nestedScrollController.enableScroll(context);
+              nestedScrollController.enableCenterScroll(constraints);
+
               return TabBarView(
                 children: _tabs.map((String name) {
                   return SafeArea(
@@ -78,11 +82,8 @@ class ExamplePage extends StatelessWidget {
                                 return ListTile(
                                   title: Text('Item $index'),
                                   onTap: () {
-                                    /// 4. Use the [NestedScrollController]!
-                                    nestedScrollController.nestedAnimateToIndex(
-                                      index,
-                                      itemExtent: itemExtent,
-                                    );
+                                    /// 5. Use the [NestedScrollController]!
+                                    nestedScrollController.nestedAnimateTo(index * itemExtent);
                                   },
                                 );
                               },
