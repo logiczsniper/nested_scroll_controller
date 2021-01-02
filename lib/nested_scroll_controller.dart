@@ -445,7 +445,7 @@ class _NestedAutoScroller {
         print("Outer jumped to: $_scrollControllerOffset");
 
         if (_innerScrollControllerOffset > 0) {
-          _endController.jumpTo(_innerScrollControllerOffset);
+          _startController.jumpTo(_innerScrollControllerOffset);
           print("Inner jumped to: $_innerScrollControllerOffset");
         }
 
