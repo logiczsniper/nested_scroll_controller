@@ -86,7 +86,8 @@ class NestedScrollController extends ScrollController {
     innerScrollController = PrimaryScrollController.of(bodyContext);
 
     /// Add each listener to the new [innerScrollController].
-    for (VoidCallback listener in _listeners) innerScrollController.addListener(listener);
+    for (VoidCallback listener in _listeners)
+      innerScrollController.addListener(listener);
   }
 
   /// Sets the [centerCorrectionOffset] for the [NestedScrollController].
@@ -281,7 +282,8 @@ class _NestedAutoScroller {
   double get _threshold => threshold;
 
   @protected
-  double get _minimumInnerOffset => innerScrollController.position.minScrollExtent;
+  double get _minimumInnerOffset =>
+      innerScrollController.position.minScrollExtent;
 
   @protected
   double get _maximumOuterOffset => scrollController.position.maxScrollExtent;
@@ -315,10 +317,12 @@ class _NestedAutoScroller {
   set endCurve(Curve newEndCurve) => _endCurve = newEndCurve;
 
   @protected
-  _MovementMethod get movementMethod => _movementMethod ?? _MovementMethod.animate;
+  _MovementMethod get movementMethod =>
+      _movementMethod ?? _MovementMethod.animate;
 
   @protected
-  set movementMethod(_MovementMethod newMovementMethod) => _movementMethod = newMovementMethod;
+  set movementMethod(_MovementMethod newMovementMethod) =>
+      _movementMethod = newMovementMethod;
 
   /// This will throw an error when the duration for the secondary scroll
   /// is zero.
@@ -384,7 +388,8 @@ class _NestedAutoScroller {
         }
 
         double _innerDistance = (_newStartOffset - _currentInnerOffset);
-        double _outerDistance = (_newEndOffset ?? _currentOuterOffset) - _currentOuterOffset;
+        double _outerDistance =
+            (_newEndOffset ?? _currentOuterOffset) - _currentOuterOffset;
         _endDuration = (_outerDistance / distance).abs() * _totalDuration;
         _startDuration = (_innerDistance / distance).abs() * _totalDuration;
 
@@ -401,7 +406,8 @@ class _NestedAutoScroller {
         }
 
         double _outerDistance = _newStartOffset - _currentOuterOffset;
-        double _innerDistance = (_newEndOffset ?? _currentInnerOffset) - _currentInnerOffset;
+        double _innerDistance =
+            (_newEndOffset ?? _currentInnerOffset) - _currentInnerOffset;
         _startDuration = (_outerDistance / distance).abs() * _totalDuration;
         _endDuration = (_innerDistance / distance).abs() * _totalDuration;
 
@@ -436,17 +442,18 @@ class _NestedAutoScroller {
             _scrollControllerOffset = _newEndOffset ?? _endController.offset;
             break;
           case _View.outer:
-            _innerScrollControllerOffset = _newEndOffset ?? _endController.offset;
+            _innerScrollControllerOffset =
+                _newEndOffset ?? _endController.offset;
             _scrollControllerOffset = _newStartOffset;
             break;
         }
 
         scrollController.jumpTo(_scrollControllerOffset);
-        print("Outer jumped to: $_scrollControllerOffset");
+        // print("Outer jumped to: $_scrollControllerOffset");
 
         if (_innerScrollControllerOffset > 0) {
           _endController.jumpTo(_innerScrollControllerOffset);
-          print("Inner jumped to: $_innerScrollControllerOffset");
+          // print("Inner jumped to: $_innerScrollControllerOffset");
         }
 
         break;
@@ -498,24 +505,24 @@ class _NestedAutoScroller {
   }
 
   Future<void> scrollToDistance() {
-    /// Some boolean values which make the following conditional much more
-    /// clear.
-    bool _isScrollUp = distance >= 0;
-    bool _shouldScroll = distance.abs() > _threshold;
-
     /// The scroll view which the animation is starting in.
     bool _isInInner = _currentInnerOffset > _minimumInnerOffset;
     _View _startView = _isInInner ? _View.inner : _View.outer;
 
+    bool _shouldScroll = distance.abs() > _threshold;
+
+    /// Overflow meaning that the scroll starts in one [_View]
+    /// and ends in the opposite [_View].
+    bool _isOverflow = (_startView == _View.inner &&
+            (_currentInnerOffset - distance) < _minimumInnerOffset) ||
+        (_startView == _View.outer &&
+            (_currentOuterOffset - distance) > _maximumOuterOffset);
+
     if (_shouldScroll) {
-      /// If one of the following is true, complete a [singleScroll]:
-      ///   1) The list is currently in the inner scroll view and the request is to scroll down.
-      ///   2) The list is currently in the outer scroll view and the request is to scroll up.
-      /// Else, complete a [doubleScroll].
-      if (_startView == _View.inner && !_isScrollUp || _startView == _View.outer && _isScrollUp) {
-        return singleScroll(_startView);
-      } else {
+      if (_isOverflow) {
         return doubleScroll(_startView);
+      } else {
+        return singleScroll(_startView);
       }
     }
     return Future<void>.value();

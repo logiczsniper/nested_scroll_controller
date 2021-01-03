@@ -24,3 +24,8 @@
 ## [0.2.1] - 26/05/2020
 
 * Fixed README - the .gif was not working on pub.dev.
+
+## [0.2.2] - 03/01/2021
+
+* Fixed bug - snapping to top of inner list when the scroll starts and ends in the inner list ([#3](https://github.com/logiczsniper/nested_scroll_controller/issues/3)).
+* Formatted lib with dartfmt.
