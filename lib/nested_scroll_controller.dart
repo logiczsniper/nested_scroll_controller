@@ -13,12 +13,12 @@ class NestedScrollController extends ScrollController {
   /// The [ScrollController] of the inner scroll view.
   ///
   /// Must be set before attempting to scroll.
-  ScrollController innerScrollController;
+  ScrollController? innerScrollController;
 
   /// The offset which 'centers' an item when it is scrolled to.
   ///
   /// * See [_NestedAutoScroller.centerCorrectionOffset].
-  double centerCorrectionOffset;
+  double? centerCorrectionOffset;
 
   /// * See [_NestedAutoScroller.threshold].
   final double threshold;
@@ -36,7 +36,7 @@ class NestedScrollController extends ScrollController {
   NestedScrollController({
     this.initialScrollOffset = 0.0,
     this.keepScrollOffset = true,
-    String debugLabel,
+    String? debugLabel,
 
     /// Special [NestedAutoScroller] parameter(s).
     this.threshold = 0.0,
@@ -87,7 +87,7 @@ class NestedScrollController extends ScrollController {
 
     /// Add each listener to the new [innerScrollController].
     for (VoidCallback listener in _listeners)
-      innerScrollController.addListener(listener);
+      innerScrollController!.addListener(listener);
   }
 
   /// Sets the [centerCorrectionOffset] for the [NestedScrollController].
@@ -116,9 +116,9 @@ class NestedScrollController extends ScrollController {
   /// * See [_NestedAutoScroller.animateTo].
   Future<void> nestedAnimateTo(
     double offset, {
-    Duration duration,
-    Curve curve,
-    Curve endCurve,
+    Duration? duration,
+    Curve? curve,
+    Curve? endCurve,
   }) {
     return useScroller(
         (scroller) => scroller.animateTo(
@@ -135,10 +135,10 @@ class NestedScrollController extends ScrollController {
   /// * See [_NestedAutoScroller.animateToIndex].
   Future<void> nestedAnimateToIndex(
     int index, {
-    @required double itemExtent,
-    Duration duration,
-    Curve curve,
-    Curve endCurve,
+    required double itemExtent,
+    Duration? duration,
+    Curve? curve,
+    Curve? endCurve,
   }) {
     return useScroller(
         (scroller) => scroller.animateToIndex(
@@ -207,7 +207,7 @@ class NestedScrollController extends ScrollController {
 class _NestedAutoScroller {
   /// The scroll controllers of the [NestedListView].
   final NestedScrollController scrollController;
-  final ScrollController innerScrollController;
+  final ScrollController? innerScrollController;
 
   /// The offset applied from the top of the list which 'centers' the [index] when
   /// [animateToIndex] is called.
@@ -229,21 +229,21 @@ class _NestedAutoScroller {
   final double threshold;
 
   /// The total duration of the entire scroll.
-  Duration _duration;
+  Duration? _duration;
 
   /// The animation [Curve] which will be applied to the first scroll.
   ///
   /// In cases where two [animateToIndex] calls are required, [_startCurve] will
   /// be applied to the first [animateToIndex] as it is at the start of the
   /// overall scroll to the [index].
-  Curve _startCurve;
+  Curve? _startCurve;
 
   /// The animated [Curve] which will be applied to the ending scroll.
   ///
   /// In cases where two [animateToIndex] calls are required, [_endCurve] will
   /// be applied to the second [animatedTo] as it is at the end of the
   /// overall scroll to the [index].
-  Curve _endCurve;
+  Curve? _endCurve;
 
   /// Suggested pairings for [_startCurve] and [_endCurve] (other than the default) are:
   ///
@@ -252,14 +252,14 @@ class _NestedAutoScroller {
 
   /// The offset between the current scroll position (in total) and
   /// the ending position.
-  double _distance;
+  double? _distance;
 
   /// Whether or not to animate or jump when moving.
-  _MovementMethod _movementMethod;
+  _MovementMethod? _movementMethod;
 
   _NestedAutoScroller({
-    @required this.scrollController,
-    @required this.innerScrollController,
+    required this.scrollController,
+    required this.innerScrollController,
     this.threshold = 0,
     this.centerCorrectionOffset = 50.0,
   })  : assert(scrollController != null && innerScrollController != null),
@@ -269,7 +269,7 @@ class _NestedAutoScroller {
   double get _currentOuterOffset => scrollController.offset ?? 0.0;
 
   @protected
-  double get _currentInnerOffset => innerScrollController.offset ?? 0.0;
+  double get _currentInnerOffset => innerScrollController!.offset ?? 0.0;
 
   @protected
   double get _currentTotalOffset =>
@@ -283,7 +283,7 @@ class _NestedAutoScroller {
 
   @protected
   double get _minimumInnerOffset =>
-      innerScrollController.position.minScrollExtent;
+      innerScrollController!.position.minScrollExtent;
 
   @protected
   double get _maximumOuterOffset => scrollController.position.maxScrollExtent;
@@ -302,19 +302,19 @@ class _NestedAutoScroller {
   Duration get duration => _duration ?? const Duration(milliseconds: 800);
 
   @protected
-  set duration(Duration newDuration) => _duration = newDuration;
+  set duration(Duration? newDuration) => _duration = newDuration;
 
   @protected
   Curve get startCurve => _startCurve ?? Curves.easeInCubic;
 
   @protected
-  set startCurve(Curve newStartCurve) => _startCurve = newStartCurve;
+  set startCurve(Curve? newStartCurve) => _startCurve = newStartCurve;
 
   @protected
   Curve get endCurve => _endCurve ?? Curves.decelerate;
 
   @protected
-  set endCurve(Curve newEndCurve) => _endCurve = newEndCurve;
+  set endCurve(Curve? newEndCurve) => _endCurve = newEndCurve;
 
   @protected
   _MovementMethod get movementMethod =>
@@ -334,8 +334,8 @@ class _NestedAutoScroller {
   /// Scroll a single scroll view (either the inner or the outer).
   @protected
   Future<void> singleScroll(_View scrollView) {
-    ScrollController _controller;
-    double _newOffset;
+    ScrollController? _controller;
+    late double _newOffset;
 
     switch (scrollView) {
       case _View.inner:
@@ -352,14 +352,14 @@ class _NestedAutoScroller {
 
     switch (movementMethod) {
       case _MovementMethod.animate:
-        return _controller.animateTo(
+        return _controller!.animateTo(
           _newOffset,
           duration: duration,
           curve: endCurve,
         );
         break;
       case _MovementMethod.jump:
-        _controller.jumpTo(_newOffset);
+        _controller!.jumpTo(_newOffset);
         break;
     }
     return Future<void>.value();
@@ -368,13 +368,13 @@ class _NestedAutoScroller {
   /// Scrolls both the [scrollController] and the [innerScrollController]
   @protected
   Future<void> doubleScroll(_View startScrollView) {
-    ScrollController _startController;
-    ScrollController _endController;
+    ScrollController? _startController;
+    ScrollController? _endController;
 
-    double _newStartOffset;
-    double _newEndOffset;
-    double _startDuration;
-    double _endDuration;
+    double? _newStartOffset;
+    double? _newEndOffset;
+    double? _startDuration;
+    late double _endDuration;
 
     switch (startScrollView) {
       case _View.inner:
@@ -418,13 +418,13 @@ class _NestedAutoScroller {
 
     switch (movementMethod) {
       case _MovementMethod.animate:
-        return _startController
+        return _startController!
             .animateTo(
               _newStartOffset,
               duration: Duration(milliseconds: _startDuration.round()),
               curve: startCurve,
             )
-            .whenComplete(() => _endController
+            .whenComplete(() => _endController!
                 .animateTo(
                   _newEndOffset ?? _endController.offset,
                   duration: Duration(milliseconds: _endDuration.round()),
@@ -433,17 +433,17 @@ class _NestedAutoScroller {
                 .catchError(onZeroDuration));
         break;
       case _MovementMethod.jump:
-        double _scrollControllerOffset;
-        double _innerScrollControllerOffset;
+        double? _scrollControllerOffset;
+        double? _innerScrollControllerOffset;
 
         switch (startScrollView) {
           case _View.inner:
             _innerScrollControllerOffset = _newStartOffset;
-            _scrollControllerOffset = _newEndOffset ?? _endController.offset;
+            _scrollControllerOffset = _newEndOffset ?? _endController!.offset;
             break;
           case _View.outer:
             _innerScrollControllerOffset =
-                _newEndOffset ?? _endController.offset;
+                _newEndOffset ?? _endController!.offset;
             _scrollControllerOffset = _newStartOffset;
             break;
         }
@@ -452,7 +452,7 @@ class _NestedAutoScroller {
         // print("Outer jumped to: $_scrollControllerOffset");
 
         if (_innerScrollControllerOffset > 0) {
-          _endController.jumpTo(_innerScrollControllerOffset);
+          _endController!.jumpTo(_innerScrollControllerOffset);
           // print("Inner jumped to: $_innerScrollControllerOffset");
         }
 
@@ -473,9 +473,9 @@ class _NestedAutoScroller {
   Future<void> animateToIndex(
     int _index,
     double _itemExtent, {
-    Duration duration,
-    Curve startCurve,
-    Curve endCurve,
+    Duration? duration,
+    Curve? startCurve,
+    Curve? endCurve,
   }) {
     assert(_index >= 0);
 
@@ -490,9 +490,9 @@ class _NestedAutoScroller {
   /// Animated to the given [_offset] in the nested scroll view.
   Future<void> animateTo(
     double _offset, {
-    Duration duration,
-    Curve startCurve,
-    Curve endCurve,
+    Duration? duration,
+    Curve? startCurve,
+    Curve? endCurve,
   }) {
     assert(_offset >= 0);
 
