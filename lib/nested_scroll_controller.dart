@@ -69,7 +69,7 @@ class NestedScrollController extends ScrollController {
     /// Create and use the [_NestedAutoScroller].
     var _nestedAutoScroller = _NestedAutoScroller(
       scrollController: this,
-      innerScrollController: innerScrollController,
+      innerScrollController: innerScrollController!,
       threshold: threshold,
       centerCorrectionOffset: centerCorrectionOffset ?? 0.0,
     );
@@ -102,6 +102,7 @@ class NestedScrollController extends ScrollController {
   }
 
   double get innerOffset => innerScrollController?.offset ?? 0.0;
+
   double get totalOffset => offset + innerOffset;
 
   /// Jump to the [offset] in the [NestedScrollView].
@@ -207,7 +208,7 @@ class NestedScrollController extends ScrollController {
 class _NestedAutoScroller {
   /// The scroll controllers of the [NestedListView].
   final NestedScrollController scrollController;
-  final ScrollController? innerScrollController;
+  final ScrollController innerScrollController;
 
   /// The offset applied from the top of the list which 'centers' the [index] when
   /// [animateToIndex] is called.
@@ -262,14 +263,13 @@ class _NestedAutoScroller {
     required this.innerScrollController,
     this.threshold = 0,
     this.centerCorrectionOffset = 50.0,
-  })  : assert(scrollController != null && innerScrollController != null),
-        assert(threshold >= 0);
+  }) : assert(threshold >= 0);
 
   @protected
-  double get _currentOuterOffset => scrollController.offset ?? 0.0;
+  double get _currentOuterOffset => scrollController.offset;
 
   @protected
-  double get _currentInnerOffset => innerScrollController!.offset ?? 0.0;
+  double get _currentInnerOffset => innerScrollController.offset;
 
   @protected
   double get _currentTotalOffset =>
@@ -283,7 +283,7 @@ class _NestedAutoScroller {
 
   @protected
   double get _minimumInnerOffset =>
-      innerScrollController!.position.minScrollExtent;
+      innerScrollController.position.minScrollExtent;
 
   @protected
   double get _maximumOuterOffset => scrollController.position.maxScrollExtent;
@@ -352,14 +352,13 @@ class _NestedAutoScroller {
 
     switch (movementMethod) {
       case _MovementMethod.animate:
-        return _controller!.animateTo(
+        return _controller.animateTo(
           _newOffset,
           duration: duration,
           curve: endCurve,
         );
-        break;
       case _MovementMethod.jump:
-        _controller!.jumpTo(_newOffset);
+        _controller.jumpTo(_newOffset);
         break;
     }
     return Future<void>.value();
@@ -418,7 +417,7 @@ class _NestedAutoScroller {
 
     switch (movementMethod) {
       case _MovementMethod.animate:
-        return _startController!
+        return _startController
             .animateTo(
               _newStartOffset,
               duration: Duration(milliseconds: _startDuration.round()),
@@ -431,7 +430,6 @@ class _NestedAutoScroller {
                   curve: endCurve,
                 )
                 .catchError(onZeroDuration));
-        break;
       case _MovementMethod.jump:
         double? _scrollControllerOffset;
         double? _innerScrollControllerOffset;
@@ -439,11 +437,11 @@ class _NestedAutoScroller {
         switch (startScrollView) {
           case _View.inner:
             _innerScrollControllerOffset = _newStartOffset;
-            _scrollControllerOffset = _newEndOffset ?? _endController!.offset;
+            _scrollControllerOffset = _newEndOffset ?? _endController.offset;
             break;
           case _View.outer:
             _innerScrollControllerOffset =
-                _newEndOffset ?? _endController!.offset;
+                _newEndOffset ?? _endController.offset;
             _scrollControllerOffset = _newStartOffset;
             break;
         }
@@ -452,7 +450,7 @@ class _NestedAutoScroller {
         // print("Outer jumped to: $_scrollControllerOffset");
 
         if (_innerScrollControllerOffset > 0) {
-          _endController!.jumpTo(_innerScrollControllerOffset);
+          _endController.jumpTo(_innerScrollControllerOffset);
           // print("Inner jumped to: $_innerScrollControllerOffset");
         }
 
