@@ -29,3 +29,7 @@
 
 * Fixed bug - snapping to top of inner list when the scroll starts and ends in the inner list ([#3](https://github.com/logiczsniper/nested_scroll_controller/issues/3)).
 * Formatted lib with dartfmt.
+
+## [1.0.0] - 03/05/2021
+
+* Null safety migration, thanks to [@xal](https://github.com/xal)!
